@@ -25,6 +25,9 @@ public class GitHubResource {
 	private static int numberOfSuccessResponses = 0;
     private static int numberOfFailures = 0;
     private static Throwable lastException = null;
+    
+    private final String PERSONAL_ACCESS_TOKEN = "NOT_A_REAL_TOKEN";
+    private final String ORGANIZATION = "YOUR_ORGANIZATION_HERE";
 	
     /**
      * Method handling HTTP POST requests. The returned object is pretty
@@ -53,7 +56,7 @@ public class GitHubResource {
 					// PAT was chosen because it doesn't expire as quickly
 					//    as a JWT or OAuth token
 					GitHub github = new GitHubBuilder()
-						  .withOAuthToken("NOT_A_REAL_TOKEN", "jiyuu-ni").build();
+						  .withOAuthToken(PERSONAL_ACCESS_TOKEN, ORGANIZATION).build();
 					github.checkApiUrlValidity();
 					  
 					/*
@@ -62,7 +65,8 @@ public class GitHubResource {
 					 *       pulling the ID out of the webhook payload
 					 * 2.) Commit a default "README.md" file to the repository
 					 *       in order to create the "main" branch
-					 * 3.) Enable required reviews on the "main" branch 
+					 * 3.) Enable required reviews on the "main" branch
+					 * 4.) Create issue in the repository describing this change
 					 */
 					
 					// The ID would actually be pulled from the webhook payload
@@ -74,9 +78,11 @@ public class GitHubResource {
 					  GHBranch defaultBranch = currentRepo.getBranch(DEFAULT_BRANCH);
 					  GHBranchProtection branchProtector =
 							  defaultBranch.enableProtection().requireReviews().enable();
+					  currentRepo.createIssue("Require PR Reviews").assignee(
+							  github.getMyself()).body("This repository now requires that all Pull Requests receive a review before they can be merged to the `main` branch. @" + github.getMyself().getLogin())
+					  			.create();
 					}
 				} catch (IOException e) {
-				  // TODO Auto-generated catch block
 				  e.printStackTrace();
 				}
 					 
